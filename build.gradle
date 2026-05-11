@@ -1,0 +1,74 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
+group = "dev.bodewig"
+version = "${gradle.gradleVersion}${suffix}"
+
+def unzip = tasks.register('unzip', Copy) {
+    from zipTree("gradle/wrapper/gradle-wrapper.jar")
+    include "**/gradle-api-*.jar"
+    into "build/unzip"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(unzip.map { "${it.destinationDir}/gradle-api-${gradle.gradleVersion}.jar" }) {
+                builtBy unzip
+            }
+
+            groupId = group
+            artifactId = "gradle-api"
+            version = version
+
+            pom {
+                name = 'Gradle API'
+                description = 'Gradle API'
+                url = 'https://github.com/LarsBodewig/gradle-api'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = 'Lars Bodewig'
+                        email = 'lars@bodewig.dev'
+                        url = 'https://bodewig.dev'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/LarsBodewig/gradle-api.git'
+                    developerConnection = 'scm:git:ssh://github.com:LarsBodewig/gradle-api.git'
+                    url = 'https://github.com/LarsBodewig/gradle-api'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuring-the-repository
+            name = "central-api"
+            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+            credentials {
+                username = System.getenv("CENTRAL_TOKEN_USERNAME")
+                password = System.getenv("CENTRAL_TOKEN_PASSWORD")
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(
+            System.getenv('GPG_PRIVATE_KEY'),
+            System.getenv('GPG_PASSPHRASE')
+    )
+    sign publishing.publications.mavenJava
+}

@@ -1,0 +1,62 @@
+# Builds the project with Gradle Wrapper and publishes to Maven Central
+# ---
+# Add the following Github variables
+# - CENTRAL_NAMESPACE:      your Sonatype Namespace (scope of User Token)
+# Add the following Github secrets from your Secret Manager
+# - CENTRAL_TOKEN_USERNAME: your Sonatype User Token User
+# - CENTRAL_TOKEN_PASSWORD: your Sonatype User Token Password
+# - GPG_PASSPHRASE:         your GPG passphrase
+# - GPG_PRIVATE_KEY:        your GPG private key
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Gradle version'
+        required: true
+        type: string
+      suffix:
+        description: 'Added to pom version'
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Java and GPG
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '${{ inputs.version }}'
+
+      - name: Publish to Maven Central
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./gradle clean publish --no-daemon --no-build-cache -Psuffix=${{ inputs.suffix }}
+
+      - name: Finalize Upload
+        # https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#1-modify-your-ci-script
+        run: |
+          token=$(printf "${{ secrets.CENTRAL_TOKEN_USERNAME }}:${{ secrets.CENTRAL_TOKEN_PASSWORD }}" | base64)
+          echo "::add-mask::$token"
+          curl \
+          --request POST \
+          --fail-with-body \
+          --no-progress-meter \
+          --header "Authorization: Bearer ${token}" \
+          https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${{ vars.CENTRAL_NAMESPACE }}
