@@ -26,12 +26,12 @@ publishing {
             pom {
                 name = 'Gradle API'
                 description = 'Gradle API'
-                url = 'https://github.com/LarsBodewig/gradle-api'
+                url = 'https://github.com/LarsBodewig/Gradle-API'
 
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
 
@@ -44,9 +44,9 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com/LarsBodewig/gradle-api.git'
-                    developerConnection = 'scm:git:ssh://github.com:LarsBodewig/gradle-api.git'
-                    url = 'https://github.com/LarsBodewig/gradle-api'
+                    connection = 'scm:git:git://github.com/LarsBodewig/Gradle-API.git'
+                    developerConnection = 'scm:git:ssh://github.com:LarsBodewig/Gradle-API.git'
+                    url = 'https://github.com/LarsBodewig/Gradle-API'
                 }
             }
         }

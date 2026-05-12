@@ -18,7 +18,7 @@ on:
         required: true
         type: string
       suffix:
-        description: 'Added to pom version'
+        description: 'Suffix for to pom version'
         type: string
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: ./gradle clean publish --no-daemon --no-build-cache -Psuffix=${{ inputs.suffix }}
+        run: gradle clean publish --no-daemon --no-build-cache -Psuffix=${{ inputs.suffix }}
 
       - name: Finalize Upload
         # https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#1-modify-your-ci-script
