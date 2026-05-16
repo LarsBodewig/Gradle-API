@@ -3,24 +3,31 @@ plugins {
     id 'signing'
 }
 
-group = "dev.bodewig"
+project.ext.suffix = project.findProperty('suffix') ?: ''
+
+group = 'dev.bodewig'
 version = "${gradle.gradleVersion}${suffix}"
 
-def unzip = tasks.register('unzip', Copy) {
-    from zipTree("gradle/wrapper/gradle-wrapper.jar")
-    include "**/gradle-api-*.jar"
-    into "build/unzip"
+configurations {
+    gradleApiHolder
+}
+
+dependencies {
+    // makes gradle generate the jar in the user home
+    gradleApiHolder gradleApi()
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifact(unzip.map { "${it.destinationDir}/gradle-api-${gradle.gradleVersion}.jar" }) {
-                builtBy unzip
-            }
+            artifact(providers.provider {
+                configurations.gradleApiHolder.files.find { file ->
+                    file.name == "gradle-api-${gradle.gradleVersion}.jar"
+                }
+            })
 
             groupId = group
-            artifactId = "gradle-api"
+            artifactId = 'gradle-api'
             version = version
 
             pom {
@@ -55,11 +62,11 @@ publishing {
     repositories {
         maven {
             // https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuring-the-repository
-            name = "central-api"
-            url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+            name = 'central-api'
+            url = uri('https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/')
             credentials {
-                username = System.getenv("CENTRAL_TOKEN_USERNAME")
-                password = System.getenv("CENTRAL_TOKEN_PASSWORD")
+                username = System.getenv('CENTRAL_TOKEN_USERNAME')
+                password = System.getenv('CENTRAL_TOKEN_PASSWORD')
             }
         }
     }

@@ -9,12 +9,15 @@
 # - GPG_PRIVATE_KEY:        your GPG private key
 
 name: Release
+run-name: >-
+  Deploy ${{ inputs.apiVersion }}
+  ${{ inputs.suffix != '' && format(' as {0}{1}', inputs.apiVersion, inputs.suffix) || '' }}
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Gradle version'
+      apiVersion:
+        description: 'Gradle API version'
         required: true
         type: string
       suffix:
@@ -39,7 +42,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '${{ inputs.version }}'
+          gradle-version: '${{ inputs.apiVersion }}'
 
       - name: Publish to Maven Central
         env:
@@ -47,7 +50,11 @@ jobs:
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: gradle clean publish --no-daemon --no-build-cache -Psuffix=${{ inputs.suffix }}
+        run: |
+          gradle clean publish \
+          --no-daemon \
+          --no-build-cache \
+          -Psuffix=${{ inputs.suffix }}
 
       - name: Finalize Upload
         # https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#1-modify-your-ci-script
