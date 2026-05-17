@@ -1,8 +1,8 @@
 # Builds the project with Gradle Wrapper and publishes to Maven Central
 # ---
-# Add the following Github variables
+# Add the following GitHub variables
 # - CENTRAL_NAMESPACE:      your Sonatype Namespace (scope of User Token)
-# Add the following Github secrets from your Secret Manager
+# Add the following GitHub secrets from your Secret Manager
 # - CENTRAL_TOKEN_USERNAME: your Sonatype User Token User
 # - CENTRAL_TOKEN_PASSWORD: your Sonatype User Token Password
 # - GPG_PASSPHRASE:         your GPG passphrase
@@ -32,7 +32,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v6
 
-      - name: Set up Java and GPG
+      - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -43,6 +43,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '${{ inputs.apiVersion }}'
+
+      - name: Setup GPG
+        # for some reason it is not enough to supply the key via env var
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
 
       - name: Publish to Maven Central
         env:

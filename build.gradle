@@ -74,8 +74,8 @@ publishing {
 
 signing {
     useInMemoryPgpKeys(
-            System.getenv('GPG_PRIVATE_KEY'),
-            System.getenv('GPG_PASSPHRASE')
+            project.hasProperty('test') ? file('test-private.key').text : System.getenv('GPG_PRIVATE_KEY'),
+            project.hasProperty('test') ? '' : System.getenv('GPG_PASSPHRASE')
     )
     sign publishing.publications.mavenJava
 }
