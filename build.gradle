@@ -1,6 +1,7 @@
 plugins {
     id 'maven-publish'
     id 'signing'
+    id 'de.undercouch.download' version '5.7.0'
 }
 
 project.ext.suffix = project.findProperty('suffix') ?: ''
@@ -17,14 +18,61 @@ dependencies {
     gradleApiHolder gradleApi()
 }
 
+def fetch = tasks.register('fetch', Download) {
+    src "https://services.gradle.org/distributions/gradle-${gradle.gradleVersion}-all.zip"
+    dest layout.buildDirectory
+    overwrite false
+}
+
+def unzip = tasks.register('unzip', Copy) {
+    from zipTree(fetch.map { it.outputs.files.singleFile })
+    into layout.buildDirectory.dir('unzip')
+    dependsOn fetch
+}
+
+def javadoc = tasks.register('javadoc', Zip) {
+    from unzip.get().outputs.files.asFileTree.matching { include('*/docs/javadoc/**/*') }
+    eachFile {
+        relativePath = new RelativePath(relativePath.file, relativePath.segments.drop(3))
+    }
+    includeEmptyDirs = false
+    setDestinationDirectory layout.buildDirectory.dir('javadoc')
+    setArchiveClassifier 'javadoc'
+    setArchiveExtension 'jar'
+    dependsOn unzip
+}
+
+def sources = tasks.register('sources', Zip) {
+    from unzip.get().outputs.files.asFileTree.matching { include('*/src/**') }
+    eachFile {
+        relativePath = new RelativePath(relativePath.file, relativePath.segments.drop(3))
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    includeEmptyDirs = false
+    setDestinationDirectory layout.buildDirectory.dir('sources')
+    setArchiveClassifier 'sources'
+    setArchiveExtension 'jar'
+    dependsOn unzip
+}
+
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        create('mavenJava', MavenPublication) {
             artifact(providers.provider {
                 configurations.gradleApiHolder.files.find { file ->
                     file.name == "gradle-api-${gradle.gradleVersion}.jar"
                 }
             })
+
+            artifact(javadoc) {
+                classifier = 'javadoc'
+                builtBy javadoc
+            }
+
+            artifact(sources) {
+                classifier = 'sources'
+                builtBy sources
+            }
 
             groupId = group
             artifactId = 'gradle-api'
