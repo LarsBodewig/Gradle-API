@@ -21,7 +21,7 @@ on:
         required: true
         type: string
       suffix:
-        description: 'Suffix for to pom version'
+        description: 'Suffix for pom version'
         type: string
 
 jobs:
@@ -30,14 +30,13 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
