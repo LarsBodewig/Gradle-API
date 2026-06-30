@@ -13,6 +13,9 @@ run-name: >-
   Deploy ${{ inputs.apiVersion }}
   ${{ inputs.suffix != '' && format(' as {0}{1}', inputs.apiVersion, inputs.suffix) || '' }}
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
