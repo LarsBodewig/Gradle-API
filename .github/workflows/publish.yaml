@@ -8,7 +8,7 @@
 # - GPG_PASSPHRASE:         your GPG passphrase
 # - GPG_PRIVATE_KEY:        your GPG private key
 
-name: Release
+name: Publish
 run-name: >-
   Deploy ${{ inputs.apiVersion }}
   ${{ inputs.suffix != '' && format(' as {0}{1}', inputs.apiVersion, inputs.suffix) || '' }}
@@ -29,27 +29,22 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-slim
     steps:
       - name: Check out code
         uses: actions/checkout@v7
-
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
-
+          java-version: '25'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '${{ inputs.apiVersion }}'
-
       - name: Setup GPG
         # for some reason it is not enough to supply the key via env var
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-
       - name: Publish to Maven Central
         env:
           CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
@@ -61,7 +56,6 @@ jobs:
           --no-daemon \
           --no-build-cache \
           -Psuffix=${{ inputs.suffix }}
-
       - name: Finalize Upload
         # https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#1-modify-your-ci-script
         run: |
