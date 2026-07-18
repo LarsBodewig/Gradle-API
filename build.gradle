@@ -30,6 +30,15 @@ def unzip = tasks.register('unzip', Copy) {
     dependsOn fetch
 }
 
+def parseGroovyVersion = tasks.register('parseGroovyVersion') {
+    File f = unzip.get().outputs.files.asFileTree.matching { include('*/lib/groovy.properties') }.singleFile
+    f.withReader {
+        Properties props = new Properties()
+        props.load(it)
+        ext.groovyVersion = props.getProperty('alias.version')
+    }
+}
+
 def javadoc = tasks.register('javadoc', Zip) {
     from unzip.get().outputs.files.asFileTree.matching { include('*/docs/javadoc/**/*') }
     eachFile {
@@ -55,6 +64,12 @@ def sources = tasks.register('sources', Zip) {
     dependsOn unzip
 }
 
+tasks.named('publishToMavenLocal') {
+    doLast {
+        println(version)
+    }
+}
+
 publishing {
     publications {
         create('mavenJava', MavenPublication) {
@@ -76,7 +91,7 @@ publishing {
 
             groupId = group
             artifactId = 'gradle-api'
-            version = version
+            version = project.version
 
             pom {
                 name = 'Gradle API'
@@ -102,6 +117,13 @@ publishing {
                     connection = 'scm:git:git://github.com/LarsBodewig/Gradle-API.git'
                     developerConnection = 'scm:git:ssh://github.com:LarsBodewig/Gradle-API.git'
                     url = 'https://github.com/LarsBodewig/Gradle-API'
+                }
+
+                withXml {
+                    Node dependency = asNode().appendNode('dependencies').appendNode('dependency')
+                    dependency.appendNode('groupId', 'org.apache.groovy')
+                    dependency.appendNode('artifactId', 'groovy')
+                    dependency.appendNode('version', parseGroovyVersion.get().ext.groovyVersion)
                 }
             }
         }

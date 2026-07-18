@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-./gradlew publishToMavenLocal -Ptest -Psuffix=-SNAPSHOT
+./gradlew publishToMavenLocal -Ptest -Psuffix=-SNAPSHOT ${@}
